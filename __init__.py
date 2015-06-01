@@ -6,9 +6,18 @@
     :license: BSD, see LICENSE for more details.
 """
 from trytond.pool import Pool
+from production import ProductionPlanPeriod, ProductionPlanPeriodStart, \
+    ProductionPlanPeriodWizard
 
 
 def register():
     Pool.register(
+        ProductionPlanPeriod,
+        ProductionPlanPeriodStart,
         module='production_plan', type_='model'
+    )
+
+    Pool.register(
+        ProductionPlanPeriodWizard,
+        module='production_plan', type_='wizard'
     )

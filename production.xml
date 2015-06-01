@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="ir.ui.view" id="plan_period_view_form">
+            <field name="model">production.plan.period</field>
+            <field name="type">form</field>
+            <field name="name">plan_period_form</field>
+        </record>
+        <record model="ir.action.act_window" id="act_plan_period_form">
+            <field name="name">Production Plan Period</field>
+            <field name="res_model">production.plan.period</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_plan_period_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="plan_period_view_form"/>
+            <field name="act_window" ref="act_plan_period_form"/>
+        </record>
+        <menuitem parent="production.menu_production"
+            action="act_plan_period_form" id="menu_plan_period_form"/>
+
+        <record model="ir.ui.view" id="production_plan_period_view_form">
+            <field name="model">production.plan.period.start</field>
+            <field name="type">form</field>
+            <field name="name">plan_period_wizard</field>
+        </record>
+        <record model="ir.action.wizard" id="wizard_production_plan_period">
+            <field name="name">Production Plan Period</field>
+            <field name="wiz_name">production.plan.period.wizard</field>
+        </record>
+        <menuitem parent="production.menu_production" action="wizard_production_plan_period"
+            id="menu_production_plan_period_form"/>
+    </data>
+</tryton>
