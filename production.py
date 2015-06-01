@@ -5,14 +5,16 @@
     :copyright: (c) 2015 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
-
+import calendar
 from trytond.model import ModelSQL, ModelView, fields
 from trytond.transaction import Transaction
 from trytond.wizard import Wizard, \
     StateView, Button, StateTransition, StateAction
 
-__all__ = ['ProductionPlanPeriod', 'ProductionPlanPeriodStart',
-    'ProductionPlanPeriodWizard']
+__all__ = [
+    'ProductionPlanPeriod', 'ProductionPlanPeriodStart',
+    'ProductionPlanPeriodWizard'
+]
 
 
 class ProductionPlanPeriod(ModelSQL, ModelView):
@@ -34,6 +36,11 @@ class ProductionPlanPeriod(ModelSQL, ModelView):
         """
         # TODO: Implement more frequency options
         assert frequency == 'weekly', "Only weekly periods are implemented"
+
+        if start_date.weekday() != calendar.MONDAY:
+            cls.raise_user_error('weekly_must_start_with_monday')
+        if end_date.weekday() != calendar.FRIDAY:
+            cls.raise_user_error('weekly_must_end_with_monday')
 
         # XXX: for each frequency period in the date range, create
         # a period.
