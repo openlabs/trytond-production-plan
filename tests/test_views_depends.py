@@ -30,7 +30,6 @@ class TestViewsDepends(unittest.TestCase):
         """
         trytond.tests.test_tryton.install_module('production_plan')
 
-    @unittest.skip('No Views')
     def test0005views(self):
         '''
         Test views.
