@@ -138,9 +138,4 @@ setup(
     %s = trytond.modules.%s
     """ % (MODULE, MODULE),
     test_suite='tests',
-    test_loader='trytond.test_loader:Loader',
-    cmdclass={
-        'test': SQLiteTest,
-        'test_on_postgres': PostgresTest,
-    }
 )

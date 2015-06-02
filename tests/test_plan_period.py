@@ -5,82 +5,86 @@
     :copyright: (C) 2014 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
-import unittest
-import trytond.tests.test_tryton
 import datetime
-from trytond.tests.test_tryton import POOL
-from trytond.transaction import Transaction
-from trytond.tests.test_tryton import DB_NAME, USER, CONTEXT
+
+import pytest
+
+from trytond.pool import Pool
+from trytond.config import config
+config.set('database', 'path', '/tmp')
+
+
 from trytond.exceptions import UserError
 
 
-class TestPlanPeriod(unittest.TestCase):
+class TestPlanPeriod:
     "Tests for Production Plan Period"
 
-    def setUp(self):
-        "Setup defaults"
+    @pytest.fixture(autouse=True)
+    def transaction(self, request):
+        from trytond.tests.test_tryton import USER, CONTEXT, DB_NAME
+        from trytond.transaction import Transaction
 
-        trytond.tests.test_tryton.install_module('production_plan')
+        Transaction().start(DB_NAME, USER, context=CONTEXT)
+
+        def finalizer():
+            Transaction().cursor.rollback()
+            Transaction().stop()
+
+        request.addfinalizer(finalizer)
 
     def test_0010_raises_error_for_monthly_periods(self):
         "Raises Error for Periods other than weekly"
 
-        ProductionPlanPeriod = POOL.get('production.plan.period')
+        ProductionPlanPeriod = Pool().get('production.plan.period')
 
-        with Transaction().start(DB_NAME, USER, context=CONTEXT):
-            with self.assertRaises(AssertionError):
-                ProductionPlanPeriod.create_periods(
-                    datetime.date(2015, 6, 1),
-                    datetime.date(2015, 6, 7),
-                    'monthly'
-                )
+        with pytest.raises(AssertionError):
+            ProductionPlanPeriod.create_periods(
+                datetime.date(2015, 6, 1),
+                datetime.date(2015, 6, 7),
+                'monthly'
+            )
 
     def test_0020_no_error_for_weekly_periods(self):
         "No error will be raised for weekly periods"
+        ProductionPlanPeriod = Pool().get('production.plan.period')
 
-        ProductionPlanPeriod = POOL.get('production.plan.period')
-
-        with Transaction().start(DB_NAME, USER, context=CONTEXT):
-                ProductionPlanPeriod.create_periods(
-                    datetime.date(2015, 6, 1),
-                    datetime.date(2015, 6, 5),
-                    'weekly'
-                )
+        ProductionPlanPeriod.create_periods(
+            datetime.date(2015, 6, 1),
+            datetime.date(2015, 6, 5),
+            'weekly'
+        )
 
     def test_0030_raise_error_if_start_date_not_monday(self):
         "Raises error if start date is not monday"
 
-        ProductionPlanPeriod = POOL.get('production.plan.period')
+        ProductionPlanPeriod = Pool().get('production.plan.period')
 
-        with Transaction().start(DB_NAME, USER, context=CONTEXT):
-            with self.assertRaises(UserError):
-                periods = ProductionPlanPeriod.create_periods(
-                    datetime.date(2015, 6, 2),
-                    datetime.date(2015, 6, 7),
-                    'weekly'
-                )
-                self.assertRaises(UserError, periods.create_periods)
+        with pytest.raises(UserError):
+            ProductionPlanPeriod.create_periods(
+                datetime.date(2015, 6, 2),
+                datetime.date(2015, 6, 7),
+                'weekly'
+            )
 
     def test_0040_no_error_if_start_date_is_monday(self):
         "No error will be raised if start date is monday"
 
-        ProductionPlanPeriod = POOL.get('production.plan.period')
+        ProductionPlanPeriod = Pool().get('production.plan.period')
 
-        with Transaction().start(DB_NAME, USER, context=CONTEXT):
-            ProductionPlanPeriod.create_periods(
-                datetime.date(2015, 6, 1),
-                datetime.date(2015, 6, 5),
-                'weekly'
-            )
+        ProductionPlanPeriod.create_periods(
+            datetime.date(2015, 6, 1),
+            datetime.date(2015, 6, 5),
+            'weekly'
+        )
 
     def test_0050_no_error_if_period_from_monday_to_friday(self):
         "No Error will be raised if start date is Monday and end date is Friday"
 
-        ProductionPlanPeriod = POOL.get('production.plan.period')
+        ProductionPlanPeriod = Pool().get('production.plan.period')
 
-        with Transaction().start(DB_NAME, USER, context=CONTEXT):
-            ProductionPlanPeriod.create_periods(
-                datetime.date(2015, 6, 1),
-                datetime.date(2015, 6, 5),
-                'weekly'
-            )
+        ProductionPlanPeriod.create_periods(
+            datetime.date(2015, 6, 1),
+            datetime.date(2015, 6, 5),
+            'weekly'
+        )
