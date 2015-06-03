@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<tree string="Production Plan">
+    <field name="product"/>
+    <field name="code"/>
+    <field name="state"/>
+</tree>
