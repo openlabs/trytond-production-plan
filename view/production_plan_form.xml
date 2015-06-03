@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<form string="Production Plan">
+    <label name="code"/>
+    <field name="code"/>
+    <notebook>
+        <page string="General" id="general">
+            <label name="product"/>
+            <field name="product"/>
+            <label name="bom"/>
+            <field name="bom"/>
+            <label name="quantity"/>
+            <field name="quantity"/>
+            <label name="uom"/>
+            <field name="uom"/>
+            <newline/>
+            <separator string="Other Info" id="other" colspan="6"/>
+            <label name="company"/>
+            <field name="company"/>
+            <label name="warehouse"/>
+            <field name="warehouse"/>
+            <label name="period"/>
+            <field name="period"/>
+        </page>
+    </notebook>
+    <group col="4" colspan="4" id="state_buttons">
+        <label name="state"/>
+        <field name="state"/>
+        <group col="7" colspan="2" id="buttons">
+            <button name="cancel" string="Cancel"
+                icon="tryton-cancel"/>
+            <button name="plan" string="Plan"/>
+            <button name="draft" string="Draft"/>
+            <button name="running" string="Run"
+                icon="tryton-go-next"/>
+            <button name="done" string="Done"
+                icon="tryton-go-next"/>
+        </group>        
+    </group>
+</form>

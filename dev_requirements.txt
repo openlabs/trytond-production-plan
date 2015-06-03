@@ -1,6 +1,7 @@
 # Install packages from requirements.txt
 -r requirements.txt
 
+pytest
 coverage
 flake8
 pytest
