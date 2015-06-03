@@ -29,5 +29,10 @@
         </record>
         <menuitem parent="production.menu_production" action="wizard_production_plan_period"
             id="menu_production_plan_period_form"/>
+        
+        <record model="ir.sequence" id="sequence_production_plan">
+            <field name="name">Production Plan</field>
+            <field name="code">production</field>
+        </record>
     </data>
 </tryton>

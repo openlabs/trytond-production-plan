@@ -7,6 +7,7 @@
 """
 from trytond.pool import Pool
 from production import *    # noqa
+from configuration import Configuration
 
 
 def register():
@@ -14,6 +15,7 @@ def register():
         ProductionPlanPeriod,
         ProductionPlanPeriodStart,
         ProductionPlan,
+        Configuration,
         module='production_plan', type_='model'
     )
 
