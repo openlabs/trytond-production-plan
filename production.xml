@@ -34,5 +34,37 @@
             <field name="name">Production Plan</field>
             <field name="code">production</field>
         </record>
+        <record model="ir.model.access" id="access_production_plan_period_admin">
++            <field name="model" search="[('model', '=', 'production.plan.period')]"/>
++            <field name="group" ref="production.group_production_admin"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="True"/>
++            <field name="perm_create" eval="True"/>
++            <field name="perm_delete" eval="True"/>
++        </record>
++        <record model="ir.model.access" id="access_production_plan_admin">
++            <field name="model" search="[('model', '=', 'production.plan')]"/>
++            <field name="group" ref="production.group_production_admin"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="True"/>
++            <field name="perm_create" eval="True"/>
++            <field name="perm_delete" eval="True"/>
++        </record>
++        <record model="ir.model.access" id="access_production_plan_period">
++            <field name="model" search="[('model', '=', 'production.plan.period')]"/>
++            <field name="group" ref="production.group_production"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="False"/>
++            <field name="perm_create" eval="False"/>
++            <field name="perm_delete" eval="False"/>
++        </record>
++        <record model="ir.model.access" id="access_production_plan">
++            <field name="model" search="[('model', '=', 'production.plan')]"/>
++            <field name="group" ref="production.group_production"/>
++            <field name="perm_read" eval="True"/>
++            <field name="perm_write" eval="False"/>
++            <field name="perm_create" eval="False"/>
++            <field name="perm_delete" eval="False"/>
++        </record>
     </data>
 </tryton>
