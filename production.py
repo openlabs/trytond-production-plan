@@ -95,7 +95,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
     company = fields.Many2One(
         'company.company', 'Company', required=True,
         states={
-            'readonly': ~Eval('state').in_(['request', 'draft']),
+            'readonly': ~Eval('state').in_(['draft']),
         },
         depends=['state'])
     warehouse = fields.Many2One(
@@ -105,7 +105,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         ],
         states={
             'readonly': (
-                ~Eval('state').in_(['request', 'draft'])
+                ~Eval('state').in_(['draft'])
                 | Eval('inputs', True) | Eval('outputs', True)
             ),
         },
@@ -116,7 +116,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             ('type', '!=', 'service'),
         ],
         states={
-            'readonly': ~Eval('state').in_(['request', 'draft']),
+            'readonly': ~Eval('state').in_(['draft']),
         })
     bom = fields.Many2One(
         'production.bom', 'BOM',
@@ -125,7 +125,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         ],
         states={
             'readonly': (
-                ~Eval('state').in_(['request', 'draft'])
+                ~Eval('state').in_(['draft'])
                 | ~Eval('warehouse', 0) | ~Eval('location', 0)
             ),
             'invisible': ~Eval('product'),
@@ -141,7 +141,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             ('category', '=', Eval('uom_category')),
         ],
         states={
-            'readonly': ~Eval('state').in_(['request', 'draft']),
+            'readonly': ~Eval('state').in_(['draft']),
             'required': Bool(Eval('bom')),
             'invisible': ~Eval('product'),
         },
@@ -153,7 +153,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         'Quantity',
         digits=(16, Eval('unit_digits', 2)),
         states={
-            'readonly': ~Eval('state').in_(['request', 'draft']),
+            'readonly': ~Eval('state').in_(['draft']),
             'required': Bool(Eval('bom')),
             'invisible': ~Eval('product'),
         },
