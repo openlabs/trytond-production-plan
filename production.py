@@ -166,6 +166,48 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         ('done', 'Done'),
     ], 'State', readonly=True)
 
+    @fields.depends('uom')
+    def on_change_with_unit_digits(self, name=None):
+        if self.uom:
+            return self.uom.digits
+        return 2
+
+    @fields.depends('product')
+    def on_change_with_uom_category(self, name=None):
+        if self.product:
+            return self.product.default_uom.category.id
+
+    @classmethod
+    def __setup__(cls):
+        super(ProductionPlan, cls).__setup__()
+        cls._transitions |= set((
+            ('draft', 'plan'),
+            ('draft', 'cancel'),
+            ('plan', 'draft'),
+            ('plan', 'running'),
+            ('plan', 'cancel'),
+            ('running', 'done'),
+            ('running', 'cancel'),
+            ('cancel', 'draft'),
+            ))
+        cls._buttons.update({
+            'plan': {
+                'invisible': ~Eval('state').in_(['draft']),
+            },
+            'draft': {
+                'invisible': ~Eval('state').in_(['plan', 'cancel']),
+            },
+            'cancel': {
+                'invisible': ~Eval('state').in_(['plan', 'running', 'draft']),
+            },
+            'running': {
+                'invisible': ~Eval('state').in_(['plan']),
+            },
+            'done': {
+                'invisible': ~Eval('state').in_(['running']),
+            },
+        })
+
     @staticmethod
     def default_state():
         return 'draft'
@@ -192,3 +234,32 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             values['code'] = Sequence.get_id(config.production_plan_sequence.id)
         productions = super(ProductionPlan, cls).create(vlist)
         return productions
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('cancel')
+    def cancel(cls, productions):
+        pass
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('draft')
+    def draft(cls, productions):
+        pass
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('running')
+    def running(cls, productions):
+        pass
+
+    @classmethod
+    @Workflow.transition('plan')
+    def plan(cls, productions):
+        pass
+
+    @classmethod
+    @ModelView.button
+    @Workflow.transition('done')
+    def done(cls, productions):
+        pass
