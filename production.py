@@ -6,14 +6,17 @@
     :license: BSD, see LICENSE for more details.
 """
 import calendar
-from trytond.model import ModelSQL, ModelView, fields
+
+from trytond.pool import Pool
+from trytond.model import ModelSQL, ModelView, Workflow, fields
+from trytond.pyson import Eval, Bool
 from trytond.transaction import Transaction
 from trytond.wizard import Wizard, \
     StateView, Button, StateTransition, StateAction
 
 __all__ = [
     'ProductionPlanPeriod', 'ProductionPlanPeriodStart',
-    'ProductionPlanPeriodWizard'
+    'ProductionPlanPeriodWizard', 'ProductionPlan',
 ]
 
 
@@ -54,7 +57,7 @@ class ProductionPlanPeriodStart(ModelView):
     end_date = fields.Date('End Date', required=True, select=True)
     frequency = fields.Selection([
         ('weekly', 'Weekly'),
-        ], 'Frequency', required=True)
+    ], 'Frequency', required=True)
 
 
 class ProductionPlanPeriodWizard(Wizard):
@@ -77,3 +80,115 @@ class ProductionPlanPeriodWizard(Wizard):
                 and Transaction().context.get('active_id')):
             return 'open_'
         return 'ask'
+
+
+class ProductionPlan(Workflow, ModelSQL, ModelView):
+    "Production Plan"
+    __name__ = 'production.plan'
+
+    _rec_name = 'code'
+
+    code = fields.Char('Code', select=True, readonly=True)
+    period = fields.Many2One(
+        'production.plan.period', 'Period', required=True, select=True
+    )
+    company = fields.Many2One(
+        'company.company', 'Company', required=True,
+        states={
+            'readonly': ~Eval('state').in_(['request', 'draft']),
+        },
+        depends=['state'])
+    warehouse = fields.Many2One(
+        'stock.location', 'Warehouse', required=True,
+        domain=[
+            ('type', '=', 'warehouse'),
+        ],
+        states={
+            'readonly': (
+                ~Eval('state').in_(['request', 'draft'])
+                | Eval('inputs', True) | Eval('outputs', True)
+            ),
+        },
+        depends=['state'])
+    product = fields.Many2One(
+        'product.product', 'Product',
+        domain=[
+            ('type', '!=', 'service'),
+        ],
+        states={
+            'readonly': ~Eval('state').in_(['request', 'draft']),
+        })
+    bom = fields.Many2One(
+        'production.bom', 'BOM',
+        domain=[
+            ('output_products', '=', Eval('product', 0)),
+        ],
+        states={
+            'readonly': (
+                ~Eval('state').in_(['request', 'draft'])
+                | ~Eval('warehouse', 0) | ~Eval('location', 0)
+            ),
+            'invisible': ~Eval('product'),
+        },
+        depends=['product'])
+    uom_category = fields.Function(
+        fields.Many2One('product.uom.category', 'Uom Category'),
+        'on_change_with_uom_category'
+    )
+    uom = fields.Many2One(
+        'product.uom', 'Uom',
+        domain=[
+            ('category', '=', Eval('uom_category')),
+        ],
+        states={
+            'readonly': ~Eval('state').in_(['request', 'draft']),
+            'required': Bool(Eval('bom')),
+            'invisible': ~Eval('product'),
+        },
+        depends=['uom_category'])
+    unit_digits = fields.Function(
+        fields.Integer('Unit Digits'), 'on_change_with_unit_digits'
+    )
+    quantity = fields.Float(
+        'Quantity',
+        digits=(16, Eval('unit_digits', 2)),
+        states={
+            'readonly': ~Eval('state').in_(['request', 'draft']),
+            'required': Bool(Eval('bom')),
+            'invisible': ~Eval('product'),
+        },
+        depends=['unit_digits'])
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('plan', 'Plan'),
+        ('running', 'Running'),
+        ('cancel', 'Canceled'),
+        ('done', 'Done'),
+    ], 'State', readonly=True)
+
+    @staticmethod
+    def default_state():
+        return 'draft'
+
+    @classmethod
+    def default_warehouse(cls):
+        Location = Pool().get('stock.location')
+        locations = Location.search(cls.warehouse.domain)
+        if len(locations) == 1:
+            return locations[0].id
+
+    @staticmethod
+    def default_company():
+        return Transaction().context.get('company')
+
+    @classmethod
+    def create(cls, vlist):
+        Sequence = Pool().get('ir.sequence')
+        Config = Pool().get('production.configuration')
+
+        vlist = [x.copy() for x in vlist]
+        config = Config(1)
+        for values in vlist:
+            values['code'] = Sequence.get_id(config.production_plan_sequence.id)
+        productions = super(ProductionPlan, cls).create(vlist)
+        return productions
