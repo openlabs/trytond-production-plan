@@ -20,6 +20,9 @@
             <field name="warehouse"/>
             <label name="period"/>
             <field name="period"/>
+            <newline/>
+            <field name="lines" mode="tree,form" colspan="4"
+                view_ids="production_plan.plan_line_view_tree,production_plan.plan_line_view_form" />
         </page>
     </notebook>
     <group col="4" colspan="4" id="state_buttons">

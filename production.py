@@ -17,6 +17,7 @@ from trytond.wizard import Wizard, \
 __all__ = [
     'ProductionPlanPeriod', 'ProductionPlanPeriodStart',
     'ProductionPlanPeriodWizard', 'ProductionPlan',
+    'ProductionPlanLine'
 ]
 
 
@@ -162,6 +163,11 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         ('cancel', 'Canceled'),
         ('done', 'Done'),
     ], 'State', readonly=True)
+    lines = fields.One2Many(
+        'production.plan.line', 'plan', 'Lines',
+        depends=['warehouse'],
+        context={'warehouse': Eval('warehouse')}
+    )
 
     @fields.depends('uom')
     def on_change_with_unit_digits(self, name=None):
@@ -260,3 +266,49 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
     @Workflow.transition('done')
     def done(cls, productions):
         pass
+
+
+class ProductionPlanLine(ModelSQL, ModelView):
+    """Production Plan Line"""
+    __name__ = 'production.plan.line'
+
+    planned_date = fields.Date('Planned Date')
+    warehouse = fields.Many2One('stock.location', 'Warehouse', domain=[
+        ('type', '=', 'warehouse'),
+    ], required=True)
+    quantity_available = fields.Function(
+        fields.Float('Quantity Available'), 'get_quantity_available'
+    )
+    quantity_needed = fields.Float('Quantity Needed')
+    quantity_planned = fields.Function(
+        fields.Float('Quantity Planned'), 'get_quantity_planned'
+    )
+    quantity_wip = fields.Function(
+        fields.Float('Quantity In Progress'), 'get_quantity_wip'
+    )
+    quantity_done = fields.Function(
+        fields.Float('Quantity Done'), 'get_quantity_done'
+    )
+    bom = fields.Many2One('production.bom', 'BOM', domain=[
+        ('output_products', '=', Eval('product', 0)),
+    ], depends=['product'], required=True)
+    product = fields.Many2One('product.product', 'Product', required=True)
+    plan = fields.Many2One('production.plan', 'Plan')
+    sequence = fields.Integer('Sequence')
+
+    # TODO: Build code for function fields
+    def get_quantity_available(self, name):
+        pass
+
+    def get_quantity_planned(self, name):
+        pass
+
+    def get_quantity_wip(self, name):
+        pass
+
+    def get_quantity_done(self, name):
+        pass
+
+    @staticmethod
+    def default_warehouse():
+        return Transaction().context.get('warehouse')

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<form string="Production Plan Line">
+    <label name="sequence"/>
+    <field name="sequence"/>
+    <label name="planned_date"/>
+    <field name="planned_date"/>
+    <label name="product"/>
+    <field name="product"/>
+    <label name="bom"/>
+    <field name="bom"/>
+    <label name="quantity_needed"/>
+    <field name="quantity_needed"/>
+    <label name="warehouse"/>
+    <field name="warehouse"/>
+    <newline/>
+    <separator string="Quantity Information" id="quantity_info" colspan="4"/>
+    <label name="quantity_available"/>
+    <field name="quantity_available"/>
+    <label name="quantity_planned"/>
+    <field name="quantity_planned"/>
+    <label name="quantity_wip"/>
+    <field name="quantity_wip"/>
+    <label name="quantity_done"/>
+    <field name="quantity_done"/>
+</form>
