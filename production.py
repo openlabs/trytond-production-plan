@@ -345,8 +345,13 @@ class ProductionPlanLine(ModelSQL, ModelView):
     ], depends=['product'], required=True)
     product = fields.Many2One('product.product', 'Product', required=True)
     plan = fields.Many2One('production.plan', 'Plan')
-    sequence = fields.Integer('Sequence')
+    sequence = fields.Integer('Sequence', required=True, select=True)
     orders = fields.One2Many('production', 'production_plan_line', 'Orders')
+
+    @classmethod
+    def __setup__(cls):
+        super(ProductionPlanLine, cls).__setup__()
+        cls._order.insert(0, ('sequence', 'ASC'))
 
     # TODO: Build code for function fields
     def get_quantity_available(self, name):
