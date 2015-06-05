@@ -1,0 +1,6 @@
+<data>
+    <xpath expr="/form/notebook/page[@id='other']/field[@name='location']" position="after">
+        <label name="production_plan_line"/>
+        <field name="production_plan_line"/>
+    </xpath>
+</data>
