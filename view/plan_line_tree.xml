@@ -3,5 +3,9 @@
     <field name="product"/>
     <field name="sequence"/>
     <field name="warehouse"/>
+    <field name="quantity_needed"/>
+    <field name="quantity_planned"/>
+    <field name="quantity_available"/>
+    <field name="quantity_wip"/>
     <field name="quantity_done"/>
 </tree>
