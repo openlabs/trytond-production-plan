@@ -38,9 +38,10 @@ class ProductionPlanPeriod(ModelSQL, ModelView):
         Create and return production plan periods for the above
         date range divided over the frequency.
         """
-        # TODO: Implement more frequency options
+        # TODO: v2.0 Implement more frequency options
         assert frequency == 'weekly', "Only weekly periods are implemented"
 
+        # TODO: v1.0 Implement friendly error messages
         if start_date.weekday() != calendar.MONDAY:
             cls.raise_user_error('weekly_must_start_with_monday')
         if end_date.weekday() != calendar.FRIDAY:
@@ -115,20 +116,15 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         ],
         states={
             'readonly': ~Eval('state').in_(['draft']),
-        })
+        }, required=True)
     bom = fields.Many2One(
         'production.bom', 'BOM',
         domain=[
             ('output_products', '=', Eval('product', 0)),
         ],
         states={
-            'readonly': (
-                ~Eval('state').in_(['draft'])
-                | ~Eval('warehouse', 0) | ~Eval('location', 0)
-            ),
-            'invisible': ~Eval('product'),
-        },
-        depends=['product'])
+            'readonly': Eval('state') != 'draft'
+        }, depends=['product'], required=True)
     uom_category = fields.Function(
         fields.Many2One('product.uom.category', 'Uom Category'),
         'on_change_with_uom_category'

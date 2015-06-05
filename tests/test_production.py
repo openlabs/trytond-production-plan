@@ -27,12 +27,18 @@ class TestProductionPlan:
 
         request.addfinalizer(finalizer)
 
-    def test_production_plan(self, dataset):
+    def test_production_plan(self, bom, plan_period, company):
         """
-        Test production plan workflow
+        Test production plan by creating one
         """
-        Party = Pool().get('party.party')
-        Product = Pool().get('product.product')
+        ProductionPlan = Pool().get('production.plan')
 
-        print Party.search([])
-        print Product.search([])
+        plan = ProductionPlan(
+            period=plan_period,
+            product=bom.outputs[0].product,
+            bom=bom,
+            company=company,
+            quantity=1,
+            uom=bom.outputs[0].uom,
+        )
+        plan.save()
