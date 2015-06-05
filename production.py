@@ -7,17 +7,18 @@
 """
 import calendar
 
-from trytond.pool import Pool
+from trytond.pool import Pool, PoolMeta
 from trytond.model import ModelSQL, ModelView, Workflow, fields
 from trytond.pyson import Eval, Bool
 from trytond.transaction import Transaction
 from trytond.wizard import Wizard, \
     StateView, Button, StateTransition, StateAction
 
+__metaclass__ = PoolMeta
 __all__ = [
     'ProductionPlanPeriod', 'ProductionPlanPeriodStart',
     'ProductionPlanPeriodWizard', 'ProductionPlan',
-    'ProductionPlanLine'
+    'ProductionPlanLine', 'Production'
 ]
 
 
@@ -345,6 +346,7 @@ class ProductionPlanLine(ModelSQL, ModelView):
     product = fields.Many2One('product.product', 'Product', required=True)
     plan = fields.Many2One('production.plan', 'Plan')
     sequence = fields.Integer('Sequence')
+    orders = fields.One2Many('production', 'production_plan_line', 'Orders')
 
     # TODO: Build code for function fields
     def get_quantity_available(self, name):
@@ -359,3 +361,11 @@ class ProductionPlanLine(ModelSQL, ModelView):
     @staticmethod
     def default_warehouse():
         return Transaction().context.get('warehouse')
+
+
+class Production:
+    "Production"
+    __name__ = 'production'
+
+    production_plan_line = fields.Many2One(
+        'production.plan.line', 'Production Plan Line')

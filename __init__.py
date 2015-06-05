@@ -12,6 +12,7 @@ from configuration import Configuration
 
 def register():
     Pool.register(
+        Production,
         ProductionPlanPeriod,
         ProductionPlanPeriodStart,
         ProductionPlan,
