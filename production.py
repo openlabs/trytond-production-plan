@@ -280,9 +280,7 @@ class ProductionPlanLine(ModelSQL, ModelView):
         fields.Float('Quantity Available'), 'get_quantity_available'
     )
     quantity_needed = fields.Float('Quantity Needed')
-    quantity_planned = fields.Function(
-        fields.Float('Quantity Planned'), 'get_quantity_planned'
-    )
+    quantity_planned = fields.Float('Quantity Planned')
     quantity_wip = fields.Function(
         fields.Float('Quantity In Progress'), 'get_quantity_wip'
     )
@@ -298,9 +296,6 @@ class ProductionPlanLine(ModelSQL, ModelView):
 
     # TODO: Build code for function fields
     def get_quantity_available(self, name):
-        pass
-
-    def get_quantity_planned(self, name):
         pass
 
     def get_quantity_wip(self, name):
