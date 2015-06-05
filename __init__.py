@@ -16,6 +16,7 @@ def register():
         ProductionPlanPeriodStart,
         ProductionPlan,
         Configuration,
+        ProductionPlanLine,
         module='production_plan', type_='model'
     )
 
