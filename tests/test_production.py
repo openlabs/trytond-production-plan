@@ -5,6 +5,7 @@
     :copyright: (C) 2015 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
+from decimal import Decimal
 import pytest
 
 from trytond.pool import Pool
@@ -42,3 +43,138 @@ class TestProductionPlan:
             uom=bom.outputs[0].uom,
         )
         plan.save()
+
+    def test_line_generation(self, bom, plan_period, company):
+        """
+        Get the BOM and add a layer of nesting into it and check if the
+        BOM generation of lines work.
+
+        - iPhone 5s
+          |- iPhone 5s with iOS 8
+          |- Apple EarPods with Remote and Mic
+          |  |- Earpod
+          |  |   |- Headphone
+          |  |   |- Mic
+          |  |- Clear Case Cover
+          |  |- White base cover
+          |- Lightning to USB Cable
+          |- USB Power Adapter
+          |- Documentation
+        """
+        BOM = Pool().get('production.bom')
+        BOMInput = Pool().get('production.bom.input')
+        BOMOutput = Pool().get('production.bom.output')
+        ProductionPlan = Pool().get('production.plan')
+        ProductTemplate = Pool().get('product.template')
+        ProductBOM = Pool().get('product.product-production.bom')
+        Product = Pool().get('product.product')
+        Uom = Pool().get('product.uom')
+
+        uom_unit, = Uom.search([('symbol', '=', 'u')])
+
+        # Create all the none-existant products
+        products = {}.fromkeys([
+            'mic', 'headphone',
+            'earpod', 'clear-case-cover', 'white-base-cover'
+        ])
+        for component in products.keys():
+            products[component] = Product(
+                template=ProductTemplate(
+                    name=component,
+                    default_uom=uom_unit,
+                    list_price=Decimal('0'),
+                    cost_price=Decimal('5'),
+                ),
+            )
+            products[component].save()
+
+        # Make the two BOMs which don't exist
+        earpod_bom = BOM(
+            name='Earpod',
+            inputs=[
+                BOMInput(
+                    product=products['headphone'],
+                    quantity=2,
+                    uom=products['headphone'].default_uom,
+                ),
+                BOMInput(
+                    product=products['mic'],
+                    quantity=1,
+                    uom=products['mic'].default_uom,
+                ),
+            ],
+            outputs=[
+                BOMOutput(
+                    product=products['earpod'],
+                    quantity=1,
+                    uom=products['earpod'].default_uom,
+                )
+            ],
+        )
+        earpod_bom.save()
+        ProductBOM(product=products['earpod'], bom=earpod_bom).save()
+
+        apple_earpod_with_mic, = Product.search([
+            ('name', '=', 'Apple EarPods with Remote and Mic')
+        ])
+        apple_earpod_boxed_bom = BOM(
+            name='Apple EarPods with Remote and Mic',
+            inputs=[
+                BOMInput(
+                    product=products['earpod'],
+                    quantity=2,
+                    uom=products['earpod'].default_uom,
+                ),
+                BOMInput(
+                    product=products['clear-case-cover'],
+                    quantity=1,
+                    uom=products['clear-case-cover'].default_uom,
+                ),
+                BOMInput(
+                    product=products['white-base-cover'],
+                    quantity=1,
+                    uom=products['white-base-cover'].default_uom,
+                ),
+            ],
+            outputs=[
+                BOMOutput(
+                    product=apple_earpod_with_mic,
+                    quantity=1,
+                    uom=apple_earpod_with_mic.default_uom,
+                )
+            ],
+        )
+        apple_earpod_boxed_bom.save()
+        ProductBOM(
+            product=apple_earpod_with_mic,
+            bom=apple_earpod_boxed_bom
+        ).save()
+
+        # Now create a production plan for iPhone
+        plan = ProductionPlan(
+            period=plan_period,
+            product=bom.outputs[0].product,
+            bom=bom,
+            company=company,
+            quantity=1,
+            uom=bom.outputs[0].uom,
+        )
+        plan.save()
+
+        # Generate the lines
+        plan.generate_lines()
+
+        # There should be 3 lines
+        #
+        # 1. Earpod - 2 qty
+        # 2. Apple EarPods with Remote and Mic - 1 qty
+        # 3. iPhone 5s - 1 qty
+        assert len(plan.lines) == 3
+
+        for line in plan.lines:
+            if line.product == bom.outputs[0].product:
+                assert line.quantity_needed == 1
+            elif line.product == apple_earpod_with_mic:
+                assert line.quantity_needed == 1
+            elif line.product == products['earpod']:
+                assert line.quantity_needed == 2
