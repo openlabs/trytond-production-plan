@@ -93,12 +93,15 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
 
     code = fields.Char('Code', select=True, readonly=True)
     period = fields.Many2One(
-        'production.plan.period', 'Period', required=True, select=True
-    )
+        'production.plan.period', 'Period', required=True, select=True,
+        states={
+            'readonly': Eval('state') != 'draft',
+        },
+        depends=['state'])
     company = fields.Many2One(
         'company.company', 'Company', required=True,
         states={
-            'readonly': ~Eval('state').in_(['draft']),
+            'readonly': Eval('state') != 'draft',
         },
         depends=['state'])
     warehouse = fields.Many2One(
@@ -116,7 +119,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             ('type', '!=', 'service'),
         ],
         states={
-            'readonly': ~Eval('state').in_(['draft']),
+            'readonly': Eval('state') != 'draft',
         }, required=True)
     bom = fields.Many2One(
         'production.bom', 'BOM',
@@ -136,7 +139,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             ('category', '=', Eval('uom_category')),
         ],
         states={
-            'readonly': ~Eval('state').in_(['draft']),
+            'readonly': Eval('state') != 'draft',
             'required': Bool(Eval('bom')),
             'invisible': ~Eval('product'),
         },
@@ -148,7 +151,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         'Quantity',
         digits=(16, Eval('unit_digits', 2)),
         states={
-            'readonly': ~Eval('state').in_(['draft']),
+            'readonly': Eval('state') != 'draft',
             'required': Bool(Eval('bom')),
             'invisible': ~Eval('product'),
         },
