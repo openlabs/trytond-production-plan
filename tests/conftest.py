@@ -146,9 +146,10 @@ def bom(request, product):
     BOMOutput = Pool().get('production.bom.output')
     ProductTemplate = Pool().get('product.template')
     Product = Pool().get('product.product')
+    ProductBOM = Pool().get('product.product-production.bom')
     Uom = Pool().get('product.uom')
 
-    name = 'iPhone 5s with iOS 8'
+    name = 'iPhone 5S'
 
     uom_unit, = Uom.search([('symbol', '=', 'u')])
     iphone_bom = BOM.search([('name', '=', name)])
@@ -191,9 +192,10 @@ def bom(request, product):
                 quantity=1,
                 uom=product.default_uom,
             )
-        ]
+        ],
     )
     iphone_bom.save()
+    ProductBOM(product=product, bom=iphone_bom).save()
     return iphone_bom
 
 

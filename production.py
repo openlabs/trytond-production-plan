@@ -188,7 +188,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             ('running', 'done'),
             ('running', 'cancel'),
             ('cancel', 'draft'),
-            ))
+        ))
         cls._buttons.update({
             'plan': {
                 'invisible': ~Eval('state').in_(['draft']),
@@ -255,13 +255,69 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
     @classmethod
     @Workflow.transition('plan')
     def plan(cls, productions):
-        pass
+        for production in productions:
+            production.generate_lines()
 
     @classmethod
     @ModelView.button
     @Workflow.transition('done')
     def done(cls, productions):
         pass
+
+    def generate_lines(self):
+        """
+        Look into the BOM and iteratively create a BOM
+        """
+        PlanLine = Pool().get('production.plan.line')
+
+        lines = []
+
+        def add_bom_to_lines(bom, product, quantity, uom):
+            """
+            :param bom: The bom to add to plan
+            :param product: The output product why this bom is needed
+            :param quantity: The quantity of output needed
+            :param uom: The uom of the output quantity
+            """
+            factor = bom.compute_factor(product, quantity or 0, uom)
+
+            for output in bom.outputs:
+                if output.product == product:
+                    break
+            else:
+                # TODO: Make error more descriptive
+                self.raise_user_error('output_not_in_bom')
+
+            quantity = output.compute_quantity(factor)
+            lines.append(PlanLine(
+                warehouse=self.warehouse,
+                quantity_needed=quantity,
+                quantity_planned=quantity,
+                product=output.product,
+                bom=bom,
+                plan=self,
+            ))
+
+            # Find any input that may need a nested production order.
+            # The check is if it has a BOM.
+            for input_ in bom.inputs:
+                if input_.product.boms:
+                    add_bom_to_lines(
+                        input_.product.boms[0].bom,
+                        input_.product,
+                        input_.compute_quantity(factor),
+                        input_.uom,
+                    )
+
+        # Start with the current BOM
+        add_bom_to_lines(self.bom, self.product, self.quantity, self.uom)
+
+        for index, line in enumerate(lines[-1:], 1):
+            # Reverse the lines and apply a sequence
+            line.sequence = index * 10
+
+        self.lines = lines
+        self.save()
 
 
 class ProductionPlanLine(ModelSQL, ModelView):
@@ -275,7 +331,7 @@ class ProductionPlanLine(ModelSQL, ModelView):
     quantity_available = fields.Function(
         fields.Float('Quantity Available'), 'get_quantity_available'
     )
-    quantity_needed = fields.Float('Quantity Needed')
+    quantity_needed = fields.Float('Quantity Needed', readonly=True)
     quantity_planned = fields.Float('Quantity Planned')
     quantity_wip = fields.Function(
         fields.Float('Quantity In Progress'), 'get_quantity_wip'
