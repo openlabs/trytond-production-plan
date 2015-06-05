@@ -313,7 +313,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         # Start with the current BOM
         add_bom_to_lines(self.bom, self.product, self.quantity, self.uom)
 
-        for index, line in enumerate(lines[-1:], 1):
+        for index, line in enumerate(lines[::-1], 1):
             # Reverse the lines and apply a sequence
             line.sequence = index * 10
 

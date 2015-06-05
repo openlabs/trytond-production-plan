@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <tree string="Production Plan">
-    <field name="product"/>
     <field name="code"/>
+    <field name="period"/>
+    <field name="product"/>
+    <field name="quantity"/>
+    <field name="uom"/>
+    <field name="warehouse"/>
     <field name="state"/>
 </tree>
