@@ -104,10 +104,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             ('type', '=', 'warehouse'),
         ],
         states={
-            'readonly': (
-                ~Eval('state').in_(['draft'])
-                | Eval('inputs', True) | Eval('outputs', True)
-            ),
+            'readonly': Eval('state') != 'draft',
         },
         depends=['state'])
     product = fields.Many2One(
