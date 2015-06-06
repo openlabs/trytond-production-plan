@@ -169,6 +169,13 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
         context={'warehouse': Eval('warehouse')}
     )
 
+    @fields.depends('product')
+    def on_change_product(self):
+        res = {}
+        if self.product:
+            res['uom'] = self.product.default_uom.id
+        return res
+
     @fields.depends('uom')
     def on_change_with_unit_digits(self, name=None):
         if self.uom:
