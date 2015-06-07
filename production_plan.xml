@@ -25,7 +25,7 @@
             <field name="view" ref="production_plan_view_form"/>
             <field name="act_window" ref="act_production_plan_form"/>
         </record>
-        <menuitem parent="production.menu_production_list" action="act_production_plan_form"
-            sequence="5" id="menu_production_plan_form"/>
+        <menuitem name="Production Plan" parent="production.menu_production" action="act_production_plan_form"
+            sequence="10" id="menu_production_plan_form"/>
     </data>
 </tryton>
