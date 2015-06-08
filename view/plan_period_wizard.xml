@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<form string="Production Plan Period">
+<form string="Generate Production Plan Period">
     <label name="frequency"/>
     <field name="frequency"/>
     <label name="start_date"/>
