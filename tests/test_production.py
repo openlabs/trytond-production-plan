@@ -178,3 +178,50 @@ class TestProductionPlan:
                 assert line.quantity_needed == 1
             elif line.product == products['earpod']:
                 assert line.quantity_needed == 2
+
+    def test_logic_for_buttons(self, company, plan_period, product, bom):
+        '''
+        Test if logic is implemented for plan and run button in production plan
+        '''
+        from trytond.transaction import Transaction
+
+        Group = Pool().get('res.group')
+        ProductionPlan = Pool().get('production.plan')
+        Location = Pool().get('stock.location')
+        User = Pool().get('res.user')
+        Production = Pool().get('production')
+        PlanLine = Pool().get('production.plan.line')
+
+        with Transaction().set_context(company=company):
+            user_group1, = Group.search([
+                ('name', '=', 'Production Administration'),
+            ])
+            user1, = User.create([{
+                'name': 'Test User',
+                'login': 'test@domain.com',
+                'password': 'password',
+                'groups': [('add', [user_group1.id])],
+            }])
+            with Transaction().set_user(user1.id):
+
+                warehouse, = Location.search([
+                    ('type', '=', 'warehouse')
+                    ], limit=1)
+
+                plan = ProductionPlan(
+                    period=plan_period,
+                    company=company,
+                    warehouse=warehouse,
+                    product=product,
+                    uom=product.default_uom,
+                    bom=bom,
+                    quantity=Decimal('1'),
+                )
+                plan.save()
+                assert len(PlanLine.search([])) == 0
+
+                ProductionPlan.plan([plan])
+                assert len(PlanLine.search([])) == 1
+
+                ProductionPlan.running([plan])
+                assert len(Production.search([])) == 1
