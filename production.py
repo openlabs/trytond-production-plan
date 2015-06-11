@@ -248,31 +248,39 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
     @classmethod
     @ModelView.button
     @Workflow.transition('cancel')
-    def cancel(cls, productions):
+    def cancel(cls, plans):
         pass
 
     @classmethod
     @ModelView.button
     @Workflow.transition('draft')
-    def draft(cls, productions):
+    def draft(cls, plans):
         pass
 
     @classmethod
     @ModelView.button
     @Workflow.transition('running')
-    def running(cls, productions):
-        pass
+    def running(cls, plans):
+        for production_plan in plans:
+            production_plan.generate_production_orders()
+
+    def generate_production_orders(self):
+        Production = Pool().get('production')
+
+        for line in self.lines:
+            order_data = line.get_production_order()
+            Production.create([order_data])
 
     @classmethod
     @Workflow.transition('plan')
-    def plan(cls, productions):
-        for production in productions:
-            production.generate_lines()
+    def plan(cls, plans):
+        for production_plan in plans:
+            production_plan.generate_lines()
 
     @classmethod
     @ModelView.button
     @Workflow.transition('done')
-    def done(cls, productions):
+    def done(cls, plans):
         pass
 
     def generate_lines(self):
@@ -376,6 +384,24 @@ class ProductionPlanLine(ModelSQL, ModelView):
     @staticmethod
     def default_warehouse():
         return Transaction().context.get('warehouse')
+
+    def get_production_order(self):
+        Production = Pool().get('production')
+        production = Production()
+
+        if not self.quantity_needed:
+            return
+        order_data = {
+            'product': self.product,
+            'bom': self.bom,
+            'uom': self.product.default_uom,
+            'quantity': self.quantity_needed,
+            'warehouse': self.warehouse,
+            'location': self.warehouse.production_location,
+            'production_plan_line': self,
+        }
+        order_data.update(production.on_change_bom())
+        return order_data
 
 
 class Production:
