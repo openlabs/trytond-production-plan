@@ -9,7 +9,7 @@ import calendar
 
 from trytond.pool import Pool, PoolMeta
 from trytond.model import ModelSQL, ModelView, Workflow, fields
-from trytond.pyson import Eval, Bool
+from trytond.pyson import If, Eval, Bool
 from trytond.transaction import Transaction
 from trytond.wizard import Wizard, \
     StateView, Button, StateTransition, StateAction
@@ -159,7 +159,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
     state = fields.Selection([
         ('draft', 'Draft'),
         ('plan', 'Plan'),
-        ('running', 'Running'),
+        ('execute', 'Execute'),
         ('cancel', 'Canceled'),
         ('done', 'Done'),
     ], 'State', readonly=True)
@@ -194,10 +194,10 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             ('draft', 'plan'),
             ('draft', 'cancel'),
             ('plan', 'draft'),
-            ('plan', 'running'),
+            ('plan', 'execute'),
             ('plan', 'cancel'),
-            ('running', 'done'),
-            ('running', 'cancel'),
+            ('execute', 'done'),
+            ('execute', 'cancel'),
             ('cancel', 'draft'),
         ))
         cls._buttons.update({
@@ -206,15 +206,17 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
             },
             'draft': {
                 'invisible': ~Eval('state').in_(['plan', 'cancel']),
+                'icon': If(Eval('state') == 'cancel', 'tryton-clear',
+                    'tryton-go-previous'),
             },
             'cancel': {
-                'invisible': ~Eval('state').in_(['plan', 'running', 'draft']),
+                'invisible': ~Eval('state').in_(['plan', 'execute', 'draft']),
             },
             'running': {
                 'invisible': ~Eval('state').in_(['plan']),
             },
             'done': {
-                'invisible': ~Eval('state').in_(['running']),
+                'invisible': ~Eval('state').in_(['execute']),
             },
         })
 
@@ -259,7 +261,7 @@ class ProductionPlan(Workflow, ModelSQL, ModelView):
 
     @classmethod
     @ModelView.button
-    @Workflow.transition('running')
+    @Workflow.transition('execute')
     def running(cls, plans):
         for production_plan in plans:
             production_plan.generate_production_orders()
